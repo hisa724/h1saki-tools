@@ -1,30 +1,30 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 
 <#
 .SYNOPSIS
-Backs up OBS Studio settings on Windows to a timestamped ZIP file.
+Windows版OBS Studioの設定を、日時付きZIPファイルへバックアップします。
 
 .DESCRIPTION
-Copies the OBS Studio configuration directory to a temporary staging directory,
-then creates a ZIP archive. OBS must be closed by default so the backup is
-internally consistent.
+OBS Studioの設定フォルダを一時作業フォルダへコピーし、復元に不要な
+キャッシュやログを除外してからZIPを作成します。設定の整合性を守るため、
+標準ではOBSを終了していないと実行できません。
 
 .PARAMETER DestinationPath
-Directory in which the ZIP file is created. The default is the directory that
-contains this script.
+ZIPファイルの保存先です。標準では、このスクリプトが置かれている
+フォルダへ保存します。
 
 .PARAMETER SourcePath
-OBS Studio configuration directory. The default is %APPDATA%\obs-studio.
-This parameter is mainly intended for portable OBS installations and testing.
+OBS Studioの設定フォルダです。標準は %APPDATA%\obs-studio です。
+主にポータブル版OBSや動作試験で使用します。
 
 .PARAMETER AllowWhileObsRunning
-Allows a backup while OBS is running. This can produce an inconsistent backup
-and is not recommended.
+OBS起動中のバックアップを許可します。不完全なバックアップになる可能性が
+あるため、通常は指定しないでください。
 
 .PARAMETER IncludeTransientData
-Includes browser caches, logs, crash reports, profiler data, and update files.
-These files are excluded by default because they are not needed to restore OBS
-settings and can make the backup much larger.
+ブラウザキャッシュ、ログ、クラッシュ記録、プロファイラーデータ、更新用
+ファイルも含めます。これらは設定の復元に不要で容量を大きくするため、
+標準では除外します。
 
 .EXAMPLE
 .\backup-obs-settings.ps1
@@ -39,8 +39,7 @@ settings and can make the backup much larger.
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
 param(
     [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$DestinationPath = $PSScriptRoot,
+    [string]$DestinationPath,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -55,6 +54,10 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($DestinationPath)) {
+    $DestinationPath = $PSScriptRoot
+}
 
 function Test-IsPathInside {
     param(
@@ -77,16 +80,16 @@ function Test-IsPathInside {
 }
 
 if (-not (Test-Path -LiteralPath $SourcePath -PathType Container)) {
-    throw "OBS settings were not found: $SourcePath"
+    throw "OBSの設定フォルダが見つかりません: $SourcePath"
 }
 
 $obsProcesses = @(Get-Process -Name 'obs64', 'obs32' -ErrorAction SilentlyContinue)
 if ($obsProcesses.Count -gt 0 -and -not $AllowWhileObsRunning) {
-    throw 'OBS Studio is running. Close OBS and run the backup again. Use -AllowWhileObsRunning only if you accept the risk of an inconsistent backup.'
+    throw 'OBS Studioが起動中です。OBSを完全に終了してから、もう一度実行してください。-AllowWhileObsRunning は不完全なバックアップになる危険を承知した場合だけ使用してください。'
 }
 
 if (Test-IsPathInside -CandidatePath $DestinationPath -ParentPath $SourcePath) {
-    throw 'DestinationPath must not be inside the OBS settings directory.'
+    throw '保存先はOBSの設定フォルダと同じ場所、またはその配下に指定できません。'
 }
 
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -100,7 +103,7 @@ while (Test-Path -LiteralPath $archivePath) {
     $suffix++
 }
 
-if (-not $PSCmdlet.ShouldProcess($archivePath, "Back up OBS settings from '$SourcePath'")) {
+if (-not $PSCmdlet.ShouldProcess($archivePath, "'$SourcePath' のOBS設定をバックアップ")) {
     return
 }
 
@@ -111,11 +114,11 @@ try {
     New-Item -ItemType Directory -Path $DestinationPath -Force | Out-Null
     New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
 
-    Write-Host 'Copying OBS settings...'
+    Write-Host 'OBS設定をコピーしています...'
     Copy-Item -LiteralPath $SourcePath -Destination $stagingContent -Recurse -Force
 
     if (-not $IncludeTransientData) {
-        Write-Host 'Removing temporary data from the backup...'
+        Write-Host 'バックアップから不要な一時データを除外しています...'
 
         $rootTransientDirectories = @(
             'crashes',
@@ -153,7 +156,7 @@ try {
     }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    Write-Host 'Creating ZIP archive...'
+    Write-Host 'ZIPファイルを作成しています...'
     [System.IO.Compression.ZipFile]::CreateFromDirectory(
         $stagingContent,
         $archivePath,
@@ -163,14 +166,14 @@ try {
 
     $archive = Get-Item -LiteralPath $archivePath
     if ($archive.Length -le 0) {
-        throw 'The backup ZIP was created but is empty.'
+        throw 'バックアップZIPは作成されましたが、容量が0バイトです。'
     }
 
     Write-Host ''
-    Write-Host 'OBS settings backup completed.' -ForegroundColor Green
-    Write-Host "Backup: $($archive.FullName)"
-    Write-Host ("Size: {0:N2} MB" -f ($archive.Length / 1MB))
-    Write-Warning 'This ZIP may contain stream keys, service tokens, and OBS WebSocket credentials. Do not upload or share it.'
+    Write-Host 'OBS設定のバックアップが完了しました。' -ForegroundColor Green
+    Write-Host "保存先: $($archive.FullName)"
+    Write-Host ("容量: {0:N2} MB" -f ($archive.Length / 1MB))
+    Write-Warning 'このZIPには配信キー、サービストークン、OBS WebSocketの認証情報などが含まれる可能性があります。アップロードや共有はしないでください。'
 }
 catch {
     if (Test-Path -LiteralPath $archivePath) {

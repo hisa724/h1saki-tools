@@ -1,8 +1,9 @@
 @echo off
+chcp 65001 >nul
 setlocal
 
-echo OBS Settings Backup
-echo ===================
+echo OBS設定バックアップ
+echo ==================
 echo.
 
 pushd "%~dp0"
@@ -12,9 +13,9 @@ popd
 
 echo.
 if not "%exitCode%"=="0" (
-    echo Backup failed. Read the error message above.
+    echo バックアップに失敗しました。上に表示されたエラーを確認してください。
 ) else (
-    echo Backup command finished.
+    echo バックアップ処理が終了しました。
 )
 
 echo.
