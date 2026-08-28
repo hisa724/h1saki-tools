@@ -9,6 +9,22 @@
 - PowerShell本体: `backup-obs-settings_ver.0.1.ps1`
 - ダブルクリック用: `backup-obs-settings_ver.0.1.cmd`
 
+## 種類別設定バックアップ（作成済み・動作検証中）
+
+`backup-obs-settings-by-type_ver.0.1.ps1` では、OBS画面上の用途に合わせて設定を分けて保存できます。
+
+| 種類 | 内容 | ZIP名 |
+|---|---|---|
+| Audio | サンプルレート、チャンネル、デスクトップ音声、トラック設定 | `obs-settings-audio-日時.zip` |
+| Microphone | マイクデバイス、音量、ミュート、モニタリング、フィルター | `obs-settings-microphone-日時.zip` |
+| Recording | 録画形式、保存先、解像度、FPS、エンコーダー | `obs-settings-recording-日時.zip` |
+| Streaming | 配信サービス、配信キー、映像・音声エンコーダー | `obs-settings-streaming-日時.zip` |
+
+`backup-obs-settings-by-type_ver.0.1.cmd` をダブルクリックすると、番号で対象を選択できます。「すべて」は4種類を別々のZIPとして作成します。
+
+> [!WARNING]
+> 個別バックアップにも配信キー、トークン、Cookieなどが含まれる可能性があります。公開・共有しないでください。
+
 > [!CAUTION]
 > **実行前にOBS Studioを完全に終了してください。OBS起動中はバックアップできません。**
 > 起動中の設定変更やファイル書き込みによって不完全なZIPが作られるのを防ぐため、スクリプトがOBSを検出するとバックアップを作成せず停止します。
