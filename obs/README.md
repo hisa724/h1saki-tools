@@ -2,11 +2,15 @@
 
 OBS Studio向けツールの配置場所です。
 
+> [!WARNING]
+> **設定バックアップを実行する前に、OBS Studioを必ず終了してください。**
+> OBS起動中は設定ファイルの整合性を守るため、バックアップを作成せず停止します。
+
 ## 公開中のツール
 
 | ツール | 内容 | 状態 |
 |---|---|---|
-| [OBS設定バックアップ](docs/backup-settings.md) | Windows版OBSの設定を日時付きZIPへ保存 | 試験版 |
+| [OBS設定バックアップ](docs/backup-settings.md) | Windows版OBSの設定を日時付きZIPへ保存（実行前にOBSの終了が必須） | 試験版 |
 
 ## 構成
 
