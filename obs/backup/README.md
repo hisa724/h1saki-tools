@@ -1,6 +1,13 @@
 # OBS設定バックアップ（Windows・試験版）
 
-`backup-obs-settings.ps1` は、OBS Studioの設定フォルダを日時付きZIPに保存するPowerShellスクリプトです。
+`backup-obs-settings_ver.0.1.ps1` は、OBS Studioの設定フォルダを日時付きZIPに保存するPowerShellスクリプトです。
+
+## 現在のバージョン
+
+- バージョン: `ver.0.1`
+- 位置づけ: 初回試験版
+- PowerShell本体: `backup-obs-settings_ver.0.1.ps1`
+- ダブルクリック用: `backup-obs-settings_ver.0.1.cmd`
 
 > [!CAUTION]
 > **実行前にOBS Studioを完全に終了してください。OBS起動中はバックアップできません。**
@@ -58,12 +65,12 @@
 ## 実行前の準備
 
 1. OBS Studioを正常終了します。
-2. [`backup-obs-settings.ps1`](backup-obs-settings.ps1) と [`backup-obs-settings.cmd`](backup-obs-settings.cmd) を同じフォルダへダウンロードします。
+2. [`backup-obs-settings_ver.0.1.ps1`](backup-obs-settings_ver.0.1.ps1) と [`backup-obs-settings_ver.0.1.cmd`](backup-obs-settings_ver.0.1.cmd) を同じフォルダへダウンロードします。
 
 ## もっとも簡単な実行方法
 
 1. OBS Studioを終了します。
-2. `backup-obs-settings.cmd` をダブルクリックします。
+2. `backup-obs-settings_ver.0.1.cmd` をダブルクリックします。
 3. 成功・失敗にかかわらずウィンドウが停止するので、表示内容を確認します。
 4. 何かキーを押すとウィンドウが閉じます。
 
@@ -78,21 +85,21 @@ PowerShellを開き、スクリプトを保存したフォルダへ移動しま�
 次のコマンドでは実際のバックアップを作成しません。
 
 ```powershell
-.\backup-obs-settings.ps1 -WhatIf
+.\backup-obs-settings_ver.0.1.ps1 -WhatIf
 ```
 
 ## バックアップを作成する
 
 ```powershell
-.\backup-obs-settings.ps1
+.\backup-obs-settings_ver.0.1.ps1
 ```
 
-既定では、`backup-obs-settings.ps1` と `backup-obs-settings.cmd` を置いたフォルダへZIPを作成します。
+既定では、`backup-obs-settings_ver.0.1.ps1` と `backup-obs-settings_ver.0.1.cmd` を置いたフォルダへZIPを作成します。
 
 ```text
 backup/
-  backup-obs-settings.cmd
-  backup-obs-settings.ps1
+  backup-obs-settings_ver.0.1.cmd
+  backup-obs-settings_ver.0.1.ps1
   obs-settings-YYYYMMDD-HHMMSS.zip  ← 作成されるバックアップ
 ```
 
@@ -102,13 +109,13 @@ backup/
 保存先を指定する場合：
 
 ```powershell
-.\backup-obs-settings.ps1 -DestinationPath "D:\Backups\OBS"
+.\backup-obs-settings_ver.0.1.ps1 -DestinationPath "D:\Backups\OBS"
 ```
 
 調査目的などで一時データも含めた完全コピーが必要な場合：
 
 ```powershell
-.\backup-obs-settings.ps1 -IncludeTransientData
+.\backup-obs-settings_ver.0.1.ps1 -IncludeTransientData
 ```
 
 通常は指定する必要はありません。
@@ -116,7 +123,7 @@ backup/
 実行ポリシーにより起動できない場合は、その1回だけ次のコマンドで実行できます。
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\backup-obs-settings.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\backup-obs-settings_ver.0.1.ps1
 ```
 
 ## 正常終了の確認

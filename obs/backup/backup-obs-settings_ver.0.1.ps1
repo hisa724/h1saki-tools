@@ -27,13 +27,13 @@ OBS起動中のバックアップを許可します。不完全なバックア�
 標準では除外します。
 
 .EXAMPLE
-.\backup-obs-settings.ps1
+.\backup-obs-settings_ver.0.1.ps1
 
 .EXAMPLE
-.\backup-obs-settings.ps1 -DestinationPath "D:\Backups\OBS"
+.\backup-obs-settings_ver.0.1.ps1 -DestinationPath "D:\Backups\OBS"
 
 .EXAMPLE
-.\backup-obs-settings.ps1 -WhatIf
+.\backup-obs-settings_ver.0.1.ps1 -WhatIf
 #>
 
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
@@ -54,6 +54,10 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$ScriptVersion = '0.1'
+
+Write-Host "OBS設定バックアップ ver.$ScriptVersion"
+Write-Host ''
 
 if ([string]::IsNullOrWhiteSpace($DestinationPath)) {
     $DestinationPath = $PSScriptRoot

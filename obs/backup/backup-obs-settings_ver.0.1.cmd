@@ -2,12 +2,12 @@
 chcp 65001 >nul
 setlocal
 
-echo OBS設定バックアップ
-echo ==================
+echo OBS設定バックアップ ver.0.1
+echo ==========================
 echo.
 
 pushd "%~dp0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0backup-obs-settings.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0backup-obs-settings_ver.0.1.ps1"
 set "exitCode=%ERRORLEVEL%"
 popd
 
