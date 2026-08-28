@@ -2,6 +2,12 @@
 
 OBS Studio向けツールの配置場所です。
 
+## 公開中のツール
+
+| ツール | 内容 | 状態 |
+|---|---|---|
+| [OBS設定バックアップ](docs/backup-settings.md) | Windows版OBSの設定を日時付きZIPへ保存 | 試験版 |
+
 ## 構成
 
 ```text
