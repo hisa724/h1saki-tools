@@ -1,0 +1,33 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*secret*
+*token*
+*credentials*
+
+# OBS exports and local profiles may contain stream information
+basic/
+plugin_config/
+profiles/
+scenes/
+*.json.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# PowerShell and Windows
+*.log
+*.tmp
+Thumbs.db
+Desktop.ini
+
+# Editors
+.idea/
+.vscode/
+*.swp
