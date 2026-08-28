@@ -20,8 +20,20 @@
 ## 実行前の準備
 
 1. OBS Studioを正常終了します。
-2. [`backup-obs-settings.ps1`](../scripts/backup-obs-settings.ps1) をダウンロードします。
-3. PowerShellを開き、スクリプトを保存したフォルダへ移動します。
+2. [`backup-obs-settings.ps1`](../scripts/backup-obs-settings.ps1) と [`backup-obs-settings.cmd`](../scripts/backup-obs-settings.cmd) を同じフォルダへダウンロードします。
+
+## もっとも簡単な実行方法
+
+1. OBS Studioを終了します。
+2. `backup-obs-settings.cmd` をダブルクリックします。
+3. 成功・失敗にかかわらずウィンドウが停止するので、表示内容を確認します。
+4. 何かキーを押すとウィンドウが閉じます。
+
+OBSが起動中の場合はバックアップを作成せず、安全のため停止します。
+
+## PowerShellから実行する方法
+
+PowerShellを開き、スクリプトを保存したフォルダへ移動します。
 
 ## 変更内容を確認する
 
