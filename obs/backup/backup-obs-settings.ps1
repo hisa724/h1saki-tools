@@ -10,8 +10,8 @@ then creates a ZIP archive. OBS must be closed by default so the backup is
 internally consistent.
 
 .PARAMETER DestinationPath
-Directory in which the ZIP file is created. The default is
-Documents\OBS-Backups.
+Directory in which the ZIP file is created. The default is the directory that
+contains this script.
 
 .PARAMETER SourcePath
 OBS Studio configuration directory. The default is %APPDATA%\obs-studio.
@@ -20,6 +20,11 @@ This parameter is mainly intended for portable OBS installations and testing.
 .PARAMETER AllowWhileObsRunning
 Allows a backup while OBS is running. This can produce an inconsistent backup
 and is not recommended.
+
+.PARAMETER IncludeTransientData
+Includes browser caches, logs, crash reports, profiler data, and update files.
+These files are excluded by default because they are not needed to restore OBS
+settings and can make the backup much larger.
 
 .EXAMPLE
 .\backup-obs-settings.ps1
@@ -35,14 +40,17 @@ and is not recommended.
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$DestinationPath = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'OBS-Backups'),
+    [string]$DestinationPath = $PSScriptRoot,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SourcePath = (Join-Path $env:APPDATA 'obs-studio'),
 
     [Parameter()]
-    [switch]$AllowWhileObsRunning
+    [switch]$AllowWhileObsRunning,
+
+    [Parameter()]
+    [switch]$IncludeTransientData
 )
 
 Set-StrictMode -Version Latest
@@ -105,6 +113,44 @@ try {
 
     Write-Host 'Copying OBS settings...'
     Copy-Item -LiteralPath $SourcePath -Destination $stagingContent -Recurse -Force
+
+    if (-not $IncludeTransientData) {
+        Write-Host 'Removing temporary data from the backup...'
+
+        $rootTransientDirectories = @(
+            'crashes',
+            'logs',
+            'profiler_data',
+            'updates'
+        )
+
+        foreach ($directoryName in $rootTransientDirectories) {
+            $transientPath = Join-Path $stagingContent $directoryName
+            if (Test-Path -LiteralPath $transientPath -PathType Container) {
+                Remove-Item -LiteralPath $transientPath -Recurse -Force
+            }
+        }
+
+        $cacheDirectoryNames = @(
+            'Cache',
+            'Code Cache',
+            'GPUCache',
+            'DawnCache',
+            'CacheStorage'
+        )
+
+        $cacheDirectories = @(
+            Get-ChildItem -LiteralPath $stagingContent -Directory -Recurse -Force |
+                Where-Object { $cacheDirectoryNames -contains $_.Name } |
+                Sort-Object { $_.FullName.Length } -Descending
+        )
+
+        foreach ($cacheDirectory in $cacheDirectories) {
+            if (Test-Path -LiteralPath $cacheDirectory.FullName -PathType Container) {
+                Remove-Item -LiteralPath $cacheDirectory.FullName -Recurse -Force
+            }
+        }
+    }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     Write-Host 'Creating ZIP archive...'

@@ -10,7 +10,7 @@ OBS Studio向けツールの配置場所です。
 
 | ツール | 内容 | 状態 |
 |---|---|---|
-| [OBS設定バックアップ](docs/backup-settings.md) | Windows版OBSの設定を日時付きZIPへ保存（実行前にOBSの終了が必須） | 試験版 |
+| [OBS設定バックアップ](backup/README.md) | Windows版OBSの設定を日時付きZIPへ保存（実行前にOBSの終了が必須） | 試験版 |
 
 ## 構成
 

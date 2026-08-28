@@ -8,7 +8,17 @@
 
 ## バックアップ対象
 
-標準では `%APPDATA%\obs-studio` の内容をまとめて保存します。プロファイル、シーンコレクション、プラグイン設定などが含まれます。
+標準では `%APPDATA%\obs-studio` から、復元に必要なプロファイル、シーンコレクション、プラグイン設定などを保存します。
+
+容量を抑えるため、次の一時データは標準でZIPから除外します。
+
+- OBSのログ
+- クラッシュ記録
+- プロファイラーデータ
+- 更新用データ
+- OBSブラウザのキャッシュ、コードキャッシュ、GPUキャッシュ
+
+ブラウザのCookieなど、ログイン状態の復元に関係するデータは除外対象にしていません。
 
 > [!WARNING]
 > ZIPには配信キー、サービストークン、OBS WebSocketの認証情報などが含まれる可能性があります。GitHub、クラウドの共有フォルダ、チャットなどへアップロードしないでください。
@@ -24,7 +34,7 @@
 ## 実行前の準備
 
 1. OBS Studioを正常終了します。
-2. [`backup-obs-settings.ps1`](../scripts/backup-obs-settings.ps1) と [`backup-obs-settings.cmd`](../scripts/backup-obs-settings.cmd) を同じフォルダへダウンロードします。
+2. [`backup-obs-settings.ps1`](backup-obs-settings.ps1) と [`backup-obs-settings.cmd`](backup-obs-settings.cmd) を同じフォルダへダウンロードします。
 
 ## もっとも簡単な実行方法
 
@@ -53,13 +63,31 @@ PowerShellを開き、スクリプトを保存したフォルダへ移動しま�
 .\backup-obs-settings.ps1
 ```
 
-既定の保存先は、Windowsの「ドキュメント」内にある `OBS-Backups` フォルダです。
+既定では、`backup-obs-settings.ps1` と `backup-obs-settings.cmd` を置いたフォルダへZIPを作成します。
+
+```text
+backup/
+  backup-obs-settings.cmd
+  backup-obs-settings.ps1
+  obs-settings-YYYYMMDD-HHMMSS.zip  ← 作成されるバックアップ
+```
+
+> [!WARNING]
+> バックアップZIPは `.gitignore` の対象です。配信キーなどを含む可能性があるため、Gitへ追加したり公開したりしないでください。
 
 保存先を指定する場合：
 
 ```powershell
 .\backup-obs-settings.ps1 -DestinationPath "D:\Backups\OBS"
 ```
+
+調査目的などで一時データも含めた完全コピーが必要な場合：
+
+```powershell
+.\backup-obs-settings.ps1 -IncludeTransientData
+```
+
+通常は指定する必要はありません。
 
 実行ポリシーにより起動できない場合は、その1回だけ次のコマンドで実行できます。
 

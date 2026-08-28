@@ -13,6 +13,7 @@ basic/
 plugin_config/
 profiles/
 scenes/
+obs-settings-*.zip
 *.json.bak
 
 # Python
