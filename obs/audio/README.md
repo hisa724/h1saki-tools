@@ -58,6 +58,48 @@ OBS を**完全に終了**してから、`configure-audio_ver.0.1.cmd` をダブ
 
 **マイクに声が入っている間だけゲーム音が自動で下がります。** 声が埋もれる問題に最も効きます。
 
+## 不要なフィルタを外す（スクリプトの編集は不要）
+
+`settings.ini` の `[audio]` で、要らないものを `false` にします。
+
+```ini
+[audio]
+NoiseSuppress=true
+Expander=false      ; 小声が削られるなら、まず OFF を試す
+Equalizer=false     ; 好みで
+Compressor=true
+Limiter=true
+Ducking=true        ; false にするとデスクトップ音声はリミッターだけになる
+```
+
+- ゲインは常に入ります（値は `GainDb`）
+- 実行時に「適用する設定」として **実際に入るフィルタの並び**が表示されるので、押す前に確認できます
+- 既に OBS に入っているフィルタは**全部置き換え**られます（手で足したものは残りません）。残したいものがある場合は、下の「スクリプトを直接編集する」で足してください
+
+### スクリプトを直接編集する（ini に無いものを足す・値を変える）
+
+`configure-audio_ver.0.1.ps1` の次の2か所が、フィルタの中身です。
+
+| 場所 | 内容 |
+|---|---|
+| `# マイク:` から始まるブロック（`$micFilters`） | マイクのフィルタ。**並び順＝OBSでの順番** |
+| `# デスクトップ音声:` から始まるブロック（`$desktopFilters`） | デスクトップ音声のフィルタ |
+
+1行が1フィルタです。例えばコンプレッサーの比率を 4 にしたいなら、その行の `ratio = 3` を `ratio = 4` に変えるだけです。
+フィルタを足すときは、同じ形の行を増やします（`New-Filter '表示名' 'OBSの内部ID' @{ 設定 }`）。
+内部IDは OBS の既存フィルタを一度手で作り、シーンコレクションのJSON（`%APPDATA%\obs-studio\basic\scenes\`）で `"id"` を見れば分かります。
+
+編集後は `-WhatIf` で並びを確認してから実行してください。
+
+```powershell
+.\configure-audio_ver.0.1.ps1 -WhatIf
+```
+
+### `microphone/` との違い
+
+`obs/microphone/configure-microphone_ver.0.1` はマイクだけを設定する旧版です。
+**音声は `audio/` を使ってください**（マイク＋デスクトップ音声、settings.ini 対応、フィルタの ON/OFF あり）。
+
 ## 主なオプション
 
 ```powershell

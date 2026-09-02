@@ -58,6 +58,13 @@ param(
     [Parameter()][ValidateRange(1, 32)][double]$DuckRatio = 10,
     [Parameter()][string]$MicName = 'マイク',
     [Parameter()][string]$DesktopName = 'デスクトップ音声',
+    # フィルタごとの ON/OFF（settings.ini の [audio] NoiseSuppress= / Expander= / Equalizer= / Compressor= / Limiter= / Ducking= でも指定可）
+    [Parameter()][bool]$UseNoiseSuppress = $true,
+    [Parameter()][bool]$UseExpander = $true,
+    [Parameter()][bool]$UseEqualizer = $true,
+    [Parameter()][bool]$UseCompressor = $true,
+    [Parameter()][bool]$UseLimiter = $true,
+    [Parameter()][bool]$UseDucking = $true,
     [Parameter()][string]$ConfigRoot = (Join-Path $env:APPDATA 'obs-studio')
 )
 
@@ -89,14 +96,18 @@ $bound = @($PSBoundParameters.Keys)
 foreach ($m in @(
     @('audio', 'GainDb', 'GainDb'), @('audio', 'ExpanderThreshold', 'ExpanderThreshold'),
     @('audio', 'CompressorThreshold', 'CompressorThreshold'), @('audio', 'DuckThreshold', 'DuckThreshold'),
-    @('audio', 'DuckRatio', 'DuckRatio'), @('audio', 'MicName', 'MicName'), @('audio', 'DesktopName', 'DesktopName'))) {
+    @('audio', 'DuckRatio', 'DuckRatio'), @('audio', 'MicName', 'MicName'), @('audio', 'DesktopName', 'DesktopName'),
+    @('audio', 'NoiseSuppress', 'UseNoiseSuppress'), @('audio', 'Expander', 'UseExpander'), @('audio', 'Equalizer', 'UseEqualizer'),
+    @('audio', 'Compressor', 'UseCompressor'), @('audio', 'Limiter', 'UseLimiter'), @('audio', 'Ducking', 'UseDucking'))) {
     $sec, $key, $var = $m
     if ($bound -contains $var) { continue }
     if (-not ($ini.ContainsKey($sec) -and $ini[$sec].ContainsKey($key))) { continue }
     $val = $ini[$sec][$key]
     if ($val -eq '') { continue }
     $cur = Get-Variable -Name $var -ValueOnly
-    if ($cur -is [double]) { $val = [double]$val } elseif ($cur -is [int]) { $val = [int]$val }
+    if ($cur -is [bool]) {
+        $val = ($val.Trim().ToLowerInvariant() -in @('true', '1', 'yes', 'on'))
+    } elseif ($cur -is [double]) { $val = [double]$val } elseif ($cur -is [int]) { $val = [int]$val }
     Set-Variable -Name $var -Value $val -Scope Script
 }
 if (Test-Path -LiteralPath $iniPath) { Write-Host "settings.ini を読み込みました: $iniPath" }
@@ -158,32 +169,38 @@ function New-Filter {
     return $f
 }
 
-# マイク: ゲインをエキスパンダーより前に置く
-$micFilters = @(
-    (New-Filter 'ノイズ抑制' 'noise_suppress_filter' @{ method = 'rnnoise' }),
-    (New-Filter 'ゲイン' 'gain_filter' @{ db = $GainDb }),
-    (New-Filter 'エキスパンダー' 'expander_filter' @{
+# マイク: ゲインをエキスパンダーより前に置く。ON/OFF は settings.ini の [audio] か -Use* 引数で
+$micFilters = @()
+if ($UseNoiseSuppress) { $micFilters += New-Filter 'ノイズ抑制' 'noise_suppress_filter' @{ method = 'rnnoise' } }
+$micFilters += New-Filter 'ゲイン' 'gain_filter' @{ db = $GainDb }
+if ($UseExpander) {
+    $micFilters += New-Filter 'エキスパンダー' 'expander_filter' @{
         ratio = 2; threshold = $ExpanderThreshold; attack_time = 10
-        release_time = 100; output_gain = 0; detector = 'RMS' }),
-    (New-Filter '3バンドイコライザー' 'basic_eq_filter' @{ low = -4; mid = 0; high = 0 }),
-    (New-Filter 'コンプレッサー' 'compressor_filter' @{
+        release_time = 100; output_gain = 0; detector = 'RMS' }
+}
+if ($UseEqualizer) { $micFilters += New-Filter '3バンドイコライザー' 'basic_eq_filter' @{ low = -4; mid = 0; high = 0 } }
+if ($UseCompressor) {
+    $micFilters += New-Filter 'コンプレッサー' 'compressor_filter' @{
         ratio = 3; threshold = $CompressorThreshold; attack_time = 6
-        release_time = 60; output_gain = 3 }),
-    (New-Filter 'リミッター' 'limiter_filter' @{ threshold = -3; release_time = 60 })
-)
+        release_time = 60; output_gain = 3 }
+}
+if ($UseLimiter) { $micFilters += New-Filter 'リミッター' 'limiter_filter' @{ threshold = -3; release_time = 60 } }
 
-# デスクトップ音声: マイクをサイドチェーンにしたダッキング
-$desktopFilters = @(
-    (New-Filter 'ダッキング' 'compressor_filter' @{
+# デスクトップ音声: マイクをサイドチェーンにしたダッキング（OFF ならリミッターだけ）
+$desktopFilters = @()
+if ($UseDucking) {
+    $desktopFilters += New-Filter 'ダッキング' 'compressor_filter' @{
         ratio = $DuckRatio; threshold = $DuckThreshold; attack_time = 5
-        release_time = 200; output_gain = 0; sidechain_source = $MicName }),
-    (New-Filter 'リミッター' 'limiter_filter' @{ threshold = -3; release_time = 60 })
-)
+        release_time = 200; output_gain = 0; sidechain_source = $MicName }
+}
+if ($UseLimiter) { $desktopFilters += New-Filter 'リミッター' 'limiter_filter' @{ threshold = -3; release_time = 60 } }
 
 Write-Host ''
 Write-Host '--- 適用する設定 ---'
-Write-Host ("  マイク         ゲイン {0} dB / エキスパンダー {1} dB / コンプ {2} dB" -f $GainDb, $ExpanderThreshold, $CompressorThreshold)
-Write-Host ("  デスクトップ音声  ダッキング {0}:1 / しきい値 {1} dB / サイドチェーン: {2}" -f $DuckRatio, $DuckThreshold, $MicName)
+Write-Host ("  マイク         " + (($micFilters | ForEach-Object { $_.name }) -join ' → '))
+Write-Host ("                 ゲイン {0} dB / エキスパンダー {1} dB / コンプ {2} dB" -f $GainDb, $ExpanderThreshold, $CompressorThreshold)
+Write-Host ("  デスクトップ音声  " + (($desktopFilters | ForEach-Object { $_.name }) -join ' → '))
+if ($UseDucking) { Write-Host ("                 ダッキング {0}:1 / しきい値 {1} dB / サイドチェーン: {2}" -f $DuckRatio, $DuckThreshold, $MicName) }
 Write-Host ''
 
 if ($simulationOnly) {

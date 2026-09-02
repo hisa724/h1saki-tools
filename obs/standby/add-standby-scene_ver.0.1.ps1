@@ -81,7 +81,8 @@ foreach ($m in @(
     if ($bound -contains $var) { continue }
     if (-not ($ini.ContainsKey($sec) -and $ini[$sec].ContainsKey($key))) { continue }
     $val = $ini[$sec][$key]
-    if ($val -eq '' -and $key -ne 'Line2' -and $key -ne 'BgmPath') { continue }
+    # Line1 / Line2 / BgmPath は「空」に意味がある（文字なし・BGMなし）。それ以外の空欄は未設定として無視
+    if ($val -eq '' -and ($key -notin @('Line1', 'Line2', 'BgmPath'))) { continue }
     $cur = Get-Variable -Name $var -ValueOnly
     if ($cur -is [double]) { $val = [double]$val } elseif ($cur -is [int]) { $val = [int]$val }
     Set-Variable -Name $var -Value $val -Scope Script
@@ -117,7 +118,7 @@ Write-Host '--- 追加する内容 ---'
 Write-Host ("  シーン「{0}」" -f $SceneName)
 Write-Host ("    動画: {0}（ループ）" -f $VideoPath)
 if ($BgmPath) { Write-Host ("    BGM : {0}（ループ / ゲイン {1} dB）" -f $BgmPath, $BgmGainDb) } else { Write-Host '    BGM : なし' }
-Write-Host ("    文字: {0}  [{1} {2}px]" -f ($text -replace "`n", ' / '), $FontName, $FontSize)
+if ($text) { Write-Host ("    文字: {0}  [{1} {2}px]" -f ($text -replace "`n", ' / '), $FontName, $FontSize) } else { Write-Host '    文字: なし（Line1/Line2 が空）' }
 Write-Host ''
 if ($simulationOnly) { Write-Host '（-WhatIf のため、ここまでで終了します。ファイルは変更していません）'; return }
 if (-not $PSCmdlet.ShouldProcess($scenePath, '待機画面シーンを追加')) { return }
@@ -170,10 +171,14 @@ if ($BgmPath) {
 }
 
 # 色は OBS の ABGR 整数。白=4294967295 / 黒=4278190080
-$textSrc = New-Source -Name ($SceneName + '_文字') -Id 'text_gdiplus' -VersionedId 'text_gdiplus_v3' -Mixers 0 -Settings (New-Obj @{
-    text = $text; font = (New-Obj @{ face = $FontName; size = $FontSize; flags = 0; style = 'Regular' })
-    color = [uint32]4294967295; opacity = 100; outline = $true; outline_size = 8; outline_color = [uint32]4278190080; outline_opacity = 100
-    align = 'center'; valign = 'center'; antialiasing = $true; read_from_file = $false })
+# Line1 / Line2 が両方空なら文字ソースを作らない
+$textSrc = $null
+if ($text) {
+    $textSrc = New-Source -Name ($SceneName + '_文字') -Id 'text_gdiplus' -VersionedId 'text_gdiplus_v3' -Mixers 0 -Settings (New-Obj @{
+        text = $text; font = (New-Obj @{ face = $FontName; size = $FontSize; flags = 0; style = 'Regular' })
+        color = [uint32]4294967295; opacity = 100; outline = $true; outline_size = 8; outline_color = [uint32]4278190080; outline_opacity = 100
+        align = 'center'; valign = 'center'; antialiasing = $true; read_from_file = $false })
+}
 
 # ---- シーン項目 ----
 function New-Item2 {
@@ -200,7 +205,7 @@ $items = @()
 $items += New-Item2 -Id 1 -Src $videoSrc -X 0 -Y 0 -BoundsType 2 -BW $CanvasWidth -BH $CanvasHeight            # 全画面（内側に収める）
 if ($bgmSrc) { $items += New-Item2 -Id 2 -Src $bgmSrc -X 0 -Y 0 -BoundsType 0 -BW 0 -BH 0 }
 $boxH = 240
-$items += New-Item2 -Id 3 -Src $textSrc -X 0 -Y ($CanvasHeight - $boxH - 60) -BoundsType 6 -BW $CanvasWidth -BH $boxH   # 下部・中央揃え
+if ($textSrc) { $items += New-Item2 -Id 3 -Src $textSrc -X 0 -Y ($CanvasHeight - $boxH - 60) -BoundsType 6 -BW $CanvasWidth -BH $boxH }   # 下部・中央揃え
 
 # ---- 既存の同名シーンとそのソースを除去（作り直し）----
 $oldScene = @($json.sources | Where-Object { $_.id -eq 'scene' -and $_.name -eq $SceneName })
@@ -222,7 +227,7 @@ $scene.settings.items = $items
 $scene.settings.id_counter = 3
 $scene.settings.custom_size = $false
 
-$newSources = @($videoSrc); if ($bgmSrc) { $newSources += $bgmSrc }; $newSources += $textSrc; $newSources += $scene
+$newSources = @($videoSrc); if ($bgmSrc) { $newSources += $bgmSrc }; if ($textSrc) { $newSources += $textSrc }; $newSources += $scene
 $json.sources = @($json.sources) + $newSources
 
 # scene_order に追加（無ければ）
