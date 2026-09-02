@@ -36,3 +36,6 @@ Desktop.ini
 .idea/
 .vscode/
 *.swp
+
+# Personal OBS script settings (paths, device names)
+obs/settings.ini
