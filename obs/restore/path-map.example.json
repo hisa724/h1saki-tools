@@ -1,0 +1,12 @@
+{
+  "mappings": [
+    {
+      "source": "D:\\OBS-Assets",
+      "destination": "E:\\OBS-Assets"
+    },
+    {
+      "source": "D:\\Recordings",
+      "destination": "E:\\Recordings"
+    }
+  ]
+}

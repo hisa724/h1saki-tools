@@ -15,6 +15,9 @@ profiles/
 scenes/
 obs-settings-*.zip
 obs-complete-*.zip
+obs/backup/scenes-before-*.json
+obs/restore/path-map*.json
+!obs/restore/path-map.example.json
 *.json.bak
 
 # Python

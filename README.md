@@ -5,7 +5,7 @@
 OBS Studio関連を含め、実際に使って便利だったスクリプトや小さなツールを順次追加します。
 
 > [!IMPORTANT]
-> 現在は [OBS設定バックアップ](obs/backup/README.md)（Windows・試験版）を公開しています。
+> 現在は [OBS設定バックアップ](obs/backup/README.md)、[OBSマイク設定](obs/microphone/README.md)、[OBS環境移行・復元支援](obs/restore/README.md)（Windows・試験版）を公開しています。
 > 試験版のため、利用前に各ツールのREADMEで対応環境と既知の制限を確認してください。
 
 ## このリポジトリについて

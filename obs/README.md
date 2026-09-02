@@ -11,12 +11,16 @@ OBS Studio向けツールの配置場所です。
 | ツール | 内容 | 状態 |
 |---|---|---|
 | [OBS設定バックアップ](backup/README.md) | Windows版OBSの設定を日時付きZIPへ保存（実行前にOBSの終了が必須） | 試験版 |
+| [OBSマイク設定](microphone/README.md) | 現在のマイクへ基準フィルター6種類と48kHz・ステレオを一括設定 | 動作検証中 |
+| [OBS環境移行・復元支援](restore/README.md) | 設定バックアップを移行先PCへ安全確認付きで復元 | 動作検証中 |
 
 ## 構成
 
 ```text
 obs/
   backup/      OBS設定のバックアップツール
+  microphone/  OBSマイク設定ツール
+  restore/     移行先PC向けの環境移行・復元支援ツール
   機能名/      今後追加する機能ごとのツールとREADME
 ```
 
