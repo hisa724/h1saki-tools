@@ -1,0 +1,35 @@
+# 外部からの Pull Request を自動でクローズする
+#
+# このリポジトリは個人用ツールの公開場所で、外部からの PR は受け付けない（README 参照）。
+# 所有者以外が開いた PR を、開かれた直後に定型コメントを付けて閉じる。
+#
+# 安全性:
+#   - pull_request_target を使うが、PR 側のコードは一切 checkout / 実行しない（コメントとクローズだけ）
+#   - 権限は pull-requests: write のみ。contents は読み取りすら与えない
+name: Close external pull requests
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  close:
+    if: github.event.pull_request.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment and close
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr comment "$PR_URL" --body "$(cat <<'EOF'
+          ありがとうございます。このリポジトリは個人用ツールの公開場所で、外部からの Pull Request は受け付けていません。
+          不具合や要望があれば Issue でお知らせください。
+
+          Thank you. This repository does not accept external pull requests. Please open an Issue instead.
+          EOF
+          )"
+          gh pr close "$PR_URL"

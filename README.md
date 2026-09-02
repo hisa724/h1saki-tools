@@ -73,3 +73,10 @@ OBS以外のツールは、公開時にカテゴリーと案内を追加しま�
 ## 免責事項
 
 このリポジトリは個人が運営する非公式プロジェクトです。OBS Studioおよび各ソフトウェア・サービスの公式プロジェクトとは関係ありません。
+
+## 外部からの Pull Request について
+
+このリポジトリは個人用ツールの公開場所です。**外部からの Pull Request は受け付けていません**（自動的にクローズされます）。
+不具合や要望は Issue でお知らせください。
+
+This repository does not accept external pull requests (they are closed automatically). Please open an Issue instead.
